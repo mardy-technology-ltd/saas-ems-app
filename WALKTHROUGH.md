@@ -15,9 +15,10 @@ Here is a summary of the directory structure and files created:
   * Non-logged-in users -> Onboarding -> Login/Signup.
   * Logged-in users without organizations -> Workspace/Tenant Setup.
   * Logged-in users with active organizations -> Role-Based Dashboards.
+  * Added `/employee-directory` route for Admin.
 
 ### 2. Multi-Tenant Authentication & State Management
-* **lib/core/services/auth_service.dart:** Firebase Authentication & Cloud Firestore backend integration with built-in in-memory **Local Mock Fallback** database. This allows developers to test the full flow without configuring a Firebase project first.
+* **lib/core/services/auth_service.dart:** Firebase Authentication & Cloud Firestore backend integration with built-in in-memory **Local Mock Fallback** database.
 * **lib/features/auth/presentation/controllers/auth_controller.dart:** Modern Riverpod Notifier implementation management for authentication and tenant states.
 * **android/app/google-services.json:** Successfully configured Firebase service keys.
 
@@ -28,8 +29,13 @@ Here is a summary of the directory structure and files created:
 * **lib/features/auth/presentation/screens/signup_screen.dart:** Register a user and choose a goal (Register a new organization or join an existing one).
 * **lib/features/auth/presentation/screens/workspace_setup_screen.dart:** Creates new organizations (generates invite code) or registers using invite codes.
 
-### 4. Role-Based Dashboards
-* **lib/features/dashboard/presentation/screens/admin_dashboard.dart:** Active status metrics, active tenant workspace invite code copier, and system management links.
+### 4. Admin Features: Employee Directory (New)
+* **lib/core/services/directory_service.dart:** Stream and query services for members belonging to the same organization, with update methods to promote roles.
+* **lib/features/directory/presentation/controllers/directory_controller.dart:** Riverpod providers linking real-time Firestore collections to directory displays.
+* **lib/features/directory/presentation/screens/employee_directory_screen.dart:** Display list of users with Search (Name/Email) and Choice Chip filters (All, Admin, HR, Employee). Includes bottom sheet layout allowing Admin to edit user designation and promote them to HR role.
+
+### 5. Role-Based Dashboards
+* **lib/features/dashboard/presentation/screens/admin_dashboard.dart:** Active status metrics, active tenant workspace invite code copier, and system management links. Now navigates to Employee Directory.
 * **lib/features/dashboard/presentation/screens/hr_dashboard.dart:** Operational summary items (pending leaves, absent counts) and HR dashboard tools (attendance verification, payroll calculators, task delegations).
 * **lib/features/dashboard/presentation/screens/employee_dashboard.dart:** Personal information card, **interactive finger-print Check-in/Out module**, task boards, and payslips view.
 
