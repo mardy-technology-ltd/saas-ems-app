@@ -137,7 +137,7 @@ class AdminDashboard extends ConsumerWidget {
               title: 'Workspace Settings',
               subtitle: 'Configure company working hours & GPS geofencing radius',
               icon: Icons.tune_rounded,
-              onTap: () {},
+              onTap: () => context.push('/workspace-settings'),
             ),
           ],
         ),

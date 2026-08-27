@@ -132,6 +132,26 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> updateOrganizationSettings(double latitude, double longitude, double radius, String checkInTime, String checkOutTime) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    final authService = ref.read(authServiceProvider);
+    try {
+      final updatedOrg = await authService.updateOrganizationSettings(latitude, longitude, radius, checkInTime, checkOutTime);
+      state = AuthState(
+        user: authService.currentUser,
+        organization: updatedOrg,
+        isLoading: false,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll("Exception: ", ""),
+      );
+      return false;
+    }
+  }
+
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);
     final authService = ref.read(authServiceProvider);

@@ -10,6 +10,7 @@ import '../../features/dashboard/presentation/screens/admin_dashboard.dart';
 import '../../features/dashboard/presentation/screens/hr_dashboard.dart';
 import '../../features/dashboard/presentation/screens/employee_dashboard.dart';
 import '../../features/directory/presentation/screens/employee_directory_screen.dart';
+import '../../features/directory/presentation/screens/workspace_settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -52,6 +53,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/employee-directory',
         builder: (context, state) => const EmployeeDirectoryScreen(),
+      ),
+      GoRoute(
+        path: '/workspace-settings',
+        builder: (context, state) => const WorkspaceSettingsScreen(),
       ),
     ],
     redirect: (context, state) {

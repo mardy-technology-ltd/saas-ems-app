@@ -47,11 +47,23 @@ class OrganizationModel {
   final String organizationId;
   final String name;
   final String inviteCode;
+  
+  // New setting fields
+  final double? officeLatitude;
+  final double? officeLongitude;
+  final double? geofenceRadius; // in meters
+  final String? checkInStartHour; // "09:00"
+  final String? checkOutStartHour; // "18:00"
 
   OrganizationModel({
     required this.organizationId,
     required this.name,
     required this.inviteCode,
+    this.officeLatitude,
+    this.officeLongitude,
+    this.geofenceRadius = 200.0,
+    this.checkInStartHour = "09:00",
+    this.checkOutStartHour = "18:00",
   });
 
   Map<String, dynamic> toMap() {
@@ -59,6 +71,11 @@ class OrganizationModel {
       'organizationId': organizationId,
       'name': name,
       'inviteCode': inviteCode,
+      'officeLatitude': officeLatitude,
+      'officeLongitude': officeLongitude,
+      'geofenceRadius': geofenceRadius,
+      'checkInStartHour': checkInStartHour,
+      'checkOutStartHour': checkOutStartHour,
     };
   }
 
@@ -67,6 +84,11 @@ class OrganizationModel {
       organizationId: map['organizationId'] ?? '',
       name: map['name'] ?? '',
       inviteCode: map['inviteCode'] ?? '',
+      officeLatitude: map['officeLatitude'] != null ? (map['officeLatitude'] as num).toDouble() : null,
+      officeLongitude: map['officeLongitude'] != null ? (map['officeLongitude'] as num).toDouble() : null,
+      geofenceRadius: map['geofenceRadius'] != null ? (map['geofenceRadius'] as num).toDouble() : 200.0,
+      checkInStartHour: map['checkInStartHour'] ?? '09:00',
+      checkOutStartHour: map['checkOutStartHour'] ?? '18:00',
     );
   }
 }
@@ -293,6 +315,38 @@ class AuthService {
     _mockUsers[_currentUser!.email] = _currentUser!;
 
     return foundOrg;
+  }
+
+  Future<OrganizationModel> updateOrganizationSettings(double latitude, double longitude, double radius, String checkInTime, String checkOutTime) async {
+    if (_currentUser == null || _currentOrg == null) throw Exception("Unauthorized action");
+    
+    final updatedOrg = OrganizationModel(
+      organizationId: _currentOrg!.organizationId,
+      name: _currentOrg!.name,
+      inviteCode: _currentOrg!.inviteCode,
+      officeLatitude: latitude,
+      officeLongitude: longitude,
+      geofenceRadius: radius,
+      checkInStartHour: checkInTime,
+      checkOutStartHour: checkOutTime,
+    );
+
+    if (isFirebaseInitialized) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('organizations')
+            .doc(_currentOrg!.organizationId)
+            .set(updatedOrg.toMap(), SetOptions(merge: true));
+      } catch (e) {
+        debugPrint("Firebase Org Update Settings Error: $e");
+      }
+    }
+
+    // Local Mock update
+    _mockOrgs[_currentOrg!.organizationId] = updatedOrg;
+    _currentOrg = updatedOrg;
+
+    return updatedOrg;
   }
 
   Future<void> signOut() async {
