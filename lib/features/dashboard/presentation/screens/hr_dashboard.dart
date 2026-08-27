@@ -148,7 +148,7 @@ class HRDashboard extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.secondaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: AppTheme.secondaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),

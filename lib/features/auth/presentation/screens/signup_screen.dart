@@ -135,7 +135,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      initialValue: _selectedRole,
                       decoration: const InputDecoration(
                         labelText: 'Account Goal',
                         prefixIcon: Icon(Icons.work_outline_rounded),

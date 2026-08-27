@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
@@ -54,7 +55,7 @@ class AdminDashboard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -122,7 +123,7 @@ class AdminDashboard extends ConsumerWidget {
               title: 'Employee Directory',
               subtitle: 'Add, suspend, or update employee records',
               icon: Icons.folder_shared_outlined,
-              onTap: () {},
+              onTap: () => context.push('/employee-directory'),
             ),
             _buildActionItem(
               context,
@@ -172,7 +173,7 @@ class AdminDashboard extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: AppTheme.primaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),

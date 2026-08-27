@@ -69,7 +69,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                       child: const Icon(Icons.person_rounded, size: 36, color: AppTheme.primaryColor),
                     ),
                     const SizedBox(width: 16),
@@ -143,7 +143,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                         width: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _isCheckedIn ? Colors.redAccent.shade100.withOpacity(0.2) : AppTheme.secondaryColor.withOpacity(0.15),
+                          color: _isCheckedIn ? Colors.redAccent.shade100.withValues(alpha: 0.2) : AppTheme.secondaryColor.withValues(alpha: 0.15),
                           border: Border.all(
                             color: _isCheckedIn ? Colors.redAccent : AppTheme.secondaryColor,
                             width: 3,
@@ -214,7 +214,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: AppTheme.primaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
