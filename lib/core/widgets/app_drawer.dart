@@ -163,6 +163,14 @@ class AppDrawer extends ConsumerWidget {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.event_note_rounded, color: AppTheme.primaryColor),
+                  title: const Text('Leave Management'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/leave-management');
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.map_rounded, color: AppTheme.primaryColor),
                   title: const Text('Geofence Audit Log'),
                   onTap: () {

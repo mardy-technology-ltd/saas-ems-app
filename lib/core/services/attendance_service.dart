@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'auth_service.dart';
+
 
 class AttendanceRecord {
   final String id;
@@ -144,6 +146,11 @@ class AttendanceService {
     String userName,
     String organizationId, {
     String checkInStartHour = "09:00",
+    double? latitude,
+    double? longitude,
+    double? officeLat,
+    double? officeLng,
+    double? geofenceRadius,
   }) async {
     final now = DateTime.now();
 
@@ -154,6 +161,13 @@ class AttendanceService {
 
     final targetDeadline = DateTime(now.year, now.month, now.day, startHour, startMinute);
     final status = now.isAfter(targetDeadline) ? 'late' : 'present';
+
+    bool isWithinGeofence = true;
+    if (latitude != null && longitude != null && officeLat != null && officeLng != null) {
+      final distanceInMeters = Geolocator.distanceBetween(latitude, longitude, officeLat, officeLng);
+      final radius = geofenceRadius ?? 200.0;
+      isWithinGeofence = distanceInMeters <= radius;
+    }
 
     final id = _useFirebase
         ? _firestore.collection('attendance').doc().id
@@ -166,6 +180,9 @@ class AttendanceService {
       organizationId: organizationId,
       checkInTime: now,
       status: status,
+      latitude: latitude,
+      longitude: longitude,
+      isWithinGeofence: isWithinGeofence,
     );
 
     if (_useFirebase) {

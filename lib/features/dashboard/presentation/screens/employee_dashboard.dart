@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -15,8 +17,28 @@ class EmployeeDashboard extends ConsumerStatefulWidget {
 
 class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   bool _isCheckedIn = false;
+  bool _isWithinGeofence = true;
   String _statusMessage = "Not checked in today";
   String _timeString = "--:--";
+
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return null;
+      }
+
+      if (permission == LocationPermission.deniedForever) return null;
+
+      return await Geolocator.getCurrentPosition();
+    } catch (_) {
+      return null;
+    }
+  }
 
   void _toggleCheckIn() async {
     final authState = ref.read(authNotifierProvider);
@@ -31,16 +53,26 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       final now = DateTime.now();
       final timeFormatted = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       
+      final position = await _getCurrentLocation();
+
       final record = await attendanceService.checkIn(
         user.uid,
         user.displayName,
         org.organizationId,
         checkInStartHour: org.checkInStartHour ?? "09:00",
+        latitude: position?.latitude,
+        longitude: position?.longitude,
+        officeLat: org.officeLatitude,
+        officeLng: org.officeLongitude,
+        geofenceRadius: org.geofenceRadius,
       );
 
       setState(() {
         _isCheckedIn = true;
-        _statusMessage = record.status == 'late' ? "Checked In (Late)" : "Checked In successfully";
+        _isWithinGeofence = record.isWithinGeofence;
+        final lateness = record.status == 'late' ? ' (Late)' : '';
+        final geofenceStatus = record.isWithinGeofence ? ' [Inside Office]' : ' [Outside Office]';
+        _statusMessage = "Checked In$lateness$geofenceStatus";
         _timeString = timeFormatted;
       });
     } else {
@@ -56,8 +88,10 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isCheckedIn ? 'Checked in successfully at $_timeString' : 'Checked out successfully'),
-        backgroundColor: AppTheme.primaryColor,
+        content: Text(_isCheckedIn 
+            ? 'Checked in at $_timeString (${_isWithinGeofence ? "In Office Radius" : "Outside Geofence"})' 
+            : 'Checked out successfully'),
+        backgroundColor: _isWithinGeofence ? AppTheme.primaryColor : Colors.orange.shade800,
       ),
     );
   }
@@ -306,7 +340,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               title: 'Apply for Leave',
               subtitle: 'Submit requests for sick, annual, or casual leaves',
               icon: Icons.calendar_today_outlined,
-              onTap: () {},
+              onTap: () => context.push('/leave-management'),
             ),
             _buildActionItem(
               context,

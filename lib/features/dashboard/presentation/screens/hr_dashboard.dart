@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -7,6 +8,87 @@ import '../controllers/notice_controller.dart';
 
 class HRDashboard extends ConsumerWidget {
   const HRDashboard({super.key});
+
+  void _showCreateNoticeDialog(BuildContext context, WidgetRef ref, String orgId, String authorName) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    String selectedPriority = 'normal';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Post Announcement'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: 'Title', hintText: 'e.g. Office Holiday Notice'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: contentController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Content', hintText: 'Enter notice details...'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Text('Priority: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ChoiceChip(
+                        label: const Text('Normal'),
+                        selected: selectedPriority == 'normal',
+                        onSelected: (val) {
+                          if (val) setDialogState(() => selectedPriority = 'normal');
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text('High'),
+                        selectedColor: Colors.redAccent.shade100,
+                        selected: selectedPriority == 'high',
+                        onSelected: (val) {
+                          if (val) setDialogState(() => selectedPriority = 'high');
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleController.text.trim().isEmpty) return;
+                    await ref.read(noticeServiceProvider).postNotice(
+                      titleController.text.trim(),
+                      contentController.text.trim(),
+                      selectedPriority,
+                      orgId,
+                      authorName,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Notice posted successfully!')),
+                      );
+                    }
+                  },
+                  child: const Text('Post'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,30 +149,49 @@ class HRDashboard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    context,
-                    title: 'Pending Leaves',
-                    value: '3 Requests',
-                    icon: Icons.time_to_leave_rounded,
-                    color: Colors.orange.shade700,
+                  child: GestureDetector(
+                    onTap: () => context.push('/leave-management'),
+                    child: _buildStatCard(
+                      context,
+                      title: 'Pending Leaves',
+                      value: '3 Requests',
+                      icon: Icons.time_to_leave_rounded,
+                      color: Colors.orange.shade700,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatCard(
-                    context,
-                    title: 'Absent Today',
-                    value: '2 Staff',
-                    icon: Icons.no_accounts_rounded,
-                    color: Colors.red.shade700,
+                  child: GestureDetector(
+                    onTap: () => context.push('/geofence-audit'),
+                    child: _buildStatCard(
+                      context,
+                      title: 'Absent Today',
+                      value: '2 Staff',
+                      icon: Icons.no_accounts_rounded,
+                      color: Colors.red.shade700,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
 
-            // Company Notice Board
-            Text('Company Notice Board', style: Theme.of(context).textTheme.titleLarge),
+            // Company Notice Board Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Company Notice Board', style: Theme.of(context).textTheme.titleLarge),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.add_comment_rounded, size: 20),
+                  onPressed: () {
+                    if (org != null) {
+                      _showCreateNoticeDialog(context, ref, org.organizationId, user?.displayName ?? 'HR Lead');
+                    }
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             noticesAsync.when(
               data: (notices) {
@@ -131,7 +232,7 @@ class HRDashboard extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: badgeColor.withOpacity(0.15),
+                                color: badgeColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -192,28 +293,28 @@ class HRDashboard extends ConsumerWidget {
               title: 'Verify Attendance',
               subtitle: 'View check-in times and locations of employees',
               icon: Icons.verified_user_outlined,
-              onTap: () {},
+              onTap: () => context.push('/geofence-audit'),
             ),
             _buildActionItem(
               context,
               title: 'Leave Approvals',
               subtitle: 'Approve, reject, or comment on time-off submissions',
               icon: Icons.calendar_today_outlined,
-              onTap: () {},
+              onTap: () => context.push('/leave-management'),
             ),
             _buildActionItem(
               context,
-              title: 'Assign Tasks',
-              subtitle: 'Assign task checklists & monitor completion rates',
-              icon: Icons.playlist_add_check_rounded,
-              onTap: () {},
+              title: 'Employee Directory',
+              subtitle: 'Manage roles, designations, and view member profiles',
+              icon: Icons.badge_outlined,
+              onTap: () => context.push('/employee-directory'),
             ),
             _buildActionItem(
               context,
               title: 'Payroll Dashboard',
               subtitle: 'Calculate salary, benefits, and email monthly payslips',
               icon: Icons.wallet_outlined,
-              onTap: () {},
+              onTap: () => context.push('/saas-billing'),
             ),
           ],
         ),
@@ -249,7 +350,7 @@ class HRDashboard extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.secondaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: AppTheme.secondaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -260,3 +361,4 @@ class HRDashboard extends ConsumerWidget {
     );
   }
 }
+

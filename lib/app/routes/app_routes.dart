@@ -15,6 +15,7 @@ import '../../features/dashboard/presentation/screens/saas_billing_screen.dart';
 import '../../features/dashboard/presentation/screens/geofence_audit_screen.dart';
 import '../../features/dashboard/presentation/screens/audit_logs_screen.dart';
 import '../../features/auth/presentation/screens/profile_screen.dart';
+import '../../features/dashboard/presentation/screens/leave_management_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -77,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/leave-management',
+        builder: (context, state) => const LeaveManagementScreen(),
       ),
     ],
     redirect: (context, state) {
