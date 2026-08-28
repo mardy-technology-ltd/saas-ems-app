@@ -23,9 +23,11 @@ class HRDashboard extends ConsumerStatefulWidget {
 class _HRDashboardState extends ConsumerState<HRDashboard> {
   int _selectedIndex = 0;
   bool _isCheckedIn = false;
+  bool _isCompletedToday = false;
   bool _isWithinGeofence = true;
   String _statusMessage = "Not checked in today";
   String _timeString = "--:--";
+  String _checkOutTimeString = "--:--";
 
   Future<Position?> _getCurrentLocation() async {
     try {
@@ -47,6 +49,16 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
   }
 
   void _toggleCheckIn() async {
+    if (_isCompletedToday) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have already completed your attendance punch in and out for today.'),
+          backgroundColor: Colors.grey,
+        ),
+      );
+      return;
+    }
+
     final authState = ref.read(authNotifierProvider);
     final user = authState.user;
     final org = authState.organization;
@@ -82,26 +94,34 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
         _statusMessage = "Checked In$lateness$geofenceStatus";
         _timeString = timeFormatted;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Checked in at $_timeString (${_isWithinGeofence ? "In Office Radius" : "Outside Geofence"})'),
+          backgroundColor: _isWithinGeofence ? AppTheme.primaryColor : Colors.orange.shade800,
+        ),
+      );
     } else {
+      final now = DateTime.now();
+      final outTimeFormatted = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
       await attendanceService.checkOut(user.uid, org.organizationId);
 
       if (!mounted) return;
       setState(() {
         _isCheckedIn = false;
-        _statusMessage = "Checked Out successfully";
-        _timeString = "--:--";
+        _isCompletedToday = true;
+        _checkOutTimeString = outTimeFormatted;
+        _statusMessage = "Attendance completed for today";
       });
-    }
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_isCheckedIn 
-            ? 'Checked in at $_timeString (${_isWithinGeofence ? "In Office Radius" : "Outside Geofence"})' 
-            : 'Checked out successfully'),
-        backgroundColor: _isWithinGeofence ? AppTheme.primaryColor : Colors.orange.shade800,
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Checked out at $outTimeFormatted. Attendance completed for today!'),
+          backgroundColor: AppTheme.secondaryColor,
+        ),
+      );
+    }
   }
 
   void _showCreateNoticeDialog(BuildContext context, WidgetRef ref, String orgId, String authorName) {
@@ -240,17 +260,31 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
                       width: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _isCheckedIn ? Colors.redAccent.shade100.withOpacity(0.2) : AppTheme.secondaryColor.withOpacity(0.15),
+                        color: _isCompletedToday
+                            ? Colors.blueGrey.shade100
+                            : _isCheckedIn
+                                ? Colors.redAccent.shade100.withOpacity(0.2)
+                                : AppTheme.secondaryColor.withOpacity(0.15),
                         border: Border.all(
-                          color: _isCheckedIn ? Colors.redAccent : AppTheme.secondaryColor,
+                          color: _isCompletedToday
+                              ? Colors.grey
+                              : _isCheckedIn
+                                  ? Colors.redAccent
+                                  : AppTheme.secondaryColor,
                           width: 2.5,
                         ),
                       ),
                       child: Center(
                         child: Icon(
-                          Icons.fingerprint_rounded,
+                          _isCompletedToday
+                              ? Icons.task_alt_rounded
+                              : Icons.fingerprint_rounded,
                           size: 32,
-                          color: _isCheckedIn ? Colors.redAccent : AppTheme.secondaryColor,
+                          color: _isCompletedToday
+                              ? Colors.grey.shade700
+                              : _isCheckedIn
+                                  ? Colors.redAccent
+                                  : AppTheme.secondaryColor,
                         ),
                       ),
                     ),
@@ -261,16 +295,26 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _isCheckedIn ? 'Checked In' : 'Attendance Check-In',
+                          _isCompletedToday
+                              ? 'Attendance Completed'
+                              : _isCheckedIn
+                                  ? 'Checked In'
+                                  : 'Attendance Check-In',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _statusMessage,
+                          _isCompletedToday
+                              ? 'Punched Out at $_checkOutTimeString (Done)'
+                              : _statusMessage,
                           style: TextStyle(
                             fontSize: 12,
-                            color: _isCheckedIn ? AppTheme.secondaryColor : AppTheme.textSecondaryColor,
-                            fontWeight: _isCheckedIn ? FontWeight.bold : FontWeight.normal,
+                            color: _isCompletedToday
+                                ? Colors.grey.shade700
+                                : _isCheckedIn
+                                    ? AppTheme.secondaryColor
+                                    : AppTheme.textSecondaryColor,
+                            fontWeight: (_isCheckedIn || _isCompletedToday) ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
                         if (_isCheckedIn)
@@ -282,13 +326,24 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: _toggleCheckIn,
+                    onPressed: _isCompletedToday ? null : _toggleCheckIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isCheckedIn ? Colors.redAccent : AppTheme.secondaryColor,
+                      backgroundColor: _isCompletedToday
+                          ? Colors.grey.shade400
+                          : _isCheckedIn
+                              ? Colors.redAccent
+                              : AppTheme.secondaryColor,
+                      disabledBackgroundColor: Colors.grey.shade300,
                       minimumSize: const Size(90, 38),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     ),
-                    child: Text(_isCheckedIn ? 'Check Out' : 'Punch In'),
+                    child: Text(
+                      _isCompletedToday
+                          ? 'Completed'
+                          : _isCheckedIn
+                              ? 'Check Out'
+                              : 'Punch In',
+                    ),
                   ),
                 ],
               ),
