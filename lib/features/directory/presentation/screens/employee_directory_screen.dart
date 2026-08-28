@@ -87,13 +87,20 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedRole,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'System Access Role',
                       prefixIcon: Icon(Icons.security_rounded),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'employee', child: Text('Employee')),
-                      DropdownMenuItem(value: 'hr', child: Text('HR Manager')),
+                      DropdownMenuItem(
+                        value: 'employee',
+                        child: Text('Employee', overflow: TextOverflow.ellipsis),
+                      ),
+                      DropdownMenuItem(
+                        value: 'hr',
+                        child: Text('HR Manager', overflow: TextOverflow.ellipsis),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {

@@ -136,6 +136,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRole,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Account Goal',
                         prefixIcon: Icon(Icons.work_outline_rounded),
@@ -143,11 +144,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       items: const [
                         DropdownMenuItem(
                           value: 'admin',
-                          child: Text('Register New Company (Admin)'),
+                          child: Text(
+                            'Register New Company (Admin)',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         DropdownMenuItem(
                           value: 'employee',
-                          child: Text('Join Existing Company (Employee/HR)'),
+                          child: Text(
+                            'Join Existing Company (Employee/HR)',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                       onChanged: (val) {
