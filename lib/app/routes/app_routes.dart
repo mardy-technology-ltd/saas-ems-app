@@ -11,6 +11,9 @@ import '../../features/dashboard/presentation/screens/hr_dashboard.dart';
 import '../../features/dashboard/presentation/screens/employee_dashboard.dart';
 import '../../features/directory/presentation/screens/employee_directory_screen.dart';
 import '../../features/directory/presentation/screens/workspace_settings_screen.dart';
+import '../../features/dashboard/presentation/screens/saas_billing_screen.dart';
+import '../../features/dashboard/presentation/screens/geofence_audit_screen.dart';
+import '../../features/dashboard/presentation/screens/audit_logs_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -57,6 +60,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/workspace-settings',
         builder: (context, state) => const WorkspaceSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/saas-billing',
+        builder: (context, state) => const SaaSBillingScreen(),
+      ),
+      GoRoute(
+        path: '/geofence-audit',
+        builder: (context, state) => const GeofenceAuditScreen(),
+      ),
+      GoRoute(
+        path: '/audit-logs',
+        builder: (context, state) => const AuditLogsScreen(),
       ),
     ],
     redirect: (context, state) {

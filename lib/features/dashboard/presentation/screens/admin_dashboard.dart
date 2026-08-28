@@ -5,9 +5,129 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/attendance_controller.dart';
+import '../controllers/notice_controller.dart';
 
 class AdminDashboard extends ConsumerWidget {
   const AdminDashboard({super.key});
+
+  void _showPostNoticeModal(BuildContext context, WidgetRef ref) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    String priority = 'normal';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Post Company Announcement',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Announcement Title',
+                      prefixIcon: Icon(Icons.campaign_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: contentController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Announcement Details',
+                      prefixIcon: Icon(Icons.description_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: priority,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Priority Level',
+                      prefixIcon: Icon(Icons.flag_outlined),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'normal',
+                        child: Text('Normal Announcement'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'high',
+                        child: Text('🔴 High Priority / Urgent'),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() {
+                          priority = val;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (titleController.text.trim().isEmpty || contentController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter both title and details.')),
+                        );
+                        return;
+                      }
+
+                      final authState = ref.read(authNotifierProvider);
+                      final user = authState.user;
+                      final org = authState.organization;
+
+                      if (org == null) return;
+
+                      await ref.read(noticeServiceProvider).postNotice(
+                            titleController.text.trim(),
+                            contentController.text.trim(),
+                            priority,
+                            org.organizationId,
+                            user?.displayName ?? 'Admin',
+                          );
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Announcement posted successfully!'),
+                            backgroundColor: AppTheme.secondaryColor,
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Post Announcement'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,8 +136,10 @@ class AdminDashboard extends ConsumerWidget {
     final org = authState.organization;
     final stats = ref.watch(attendanceStatsProvider);
     final departments = ref.watch(departmentStatsProvider);
+    final noticesAsync = ref.watch(noticeStreamProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Admin Portal'),
         actions: [
@@ -58,7 +180,7 @@ class AdminDashboard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -102,7 +224,7 @@ class AdminDashboard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                    color: AppTheme.secondaryColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -156,7 +278,7 @@ class AdminDashboard extends ConsumerWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
-                        value: stats.totalStaff > 0 ? (stats.totalPresent / stats.totalStaff) : 0.0,
+                        value: (stats.totalStaff > 0 ? (stats.totalPresent / stats.totalStaff) : 0.0).clamp(0.0, 1.0),
                         minHeight: 10,
                         backgroundColor: Colors.grey.shade200,
                         color: AppTheme.secondaryColor,
@@ -265,9 +387,9 @@ class AdminDashboard extends ConsumerWidget {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
-                              value: dept.percentage / 100,
+                              value: (dept.percentage / 100).clamp(0.0, 1.0),
                               minHeight: 6,
-                              backgroundColor: deptColor.withValues(alpha: 0.1),
+                              backgroundColor: deptColor.withOpacity(0.1),
                               color: deptColor,
                             ),
                           ),
@@ -306,6 +428,134 @@ class AdminDashboard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Company Notice Board Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Company Notice Board',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _showPostNoticeModal(context, ref),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Post Notice'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            noticesAsync.when(
+              data: (notices) {
+                if (notices.isEmpty) {
+                  return const Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Text(
+                          'No announcements posted yet.',
+                          style: TextStyle(color: AppTheme.textSecondaryColor),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: notices.map((notice) {
+                    final isHighPriority = notice.priority == 'high';
+                    final badgeColor = isHighPriority ? Colors.red : AppTheme.primaryColor;
+
+                    return Card(
+                      color: Colors.white,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: isHighPriority
+                            ? const BorderSide(color: Colors.redAccent, width: 1.5)
+                            : BorderSide.none,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: badgeColor.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    isHighPriority ? 'HIGH PRIORITY' : 'ANNOUNCEMENT',
+                                    style: TextStyle(
+                                      color: badgeColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.grey),
+                                  onPressed: () => ref.read(noticeServiceProvider).deleteNotice(notice.id),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              notice.title,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              notice.content,
+                              style: const TextStyle(color: AppTheme.textSecondaryColor, fontSize: 13),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'By ${notice.authorName}',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  '${notice.createdAt.day}/${notice.createdAt.month}/${notice.createdAt.year} ${notice.createdAt.hour}:${notice.createdAt.minute.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondaryColor),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+              loading: () => const SizedBox(
+                height: 80,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, s) => Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Error loading notices: $e', style: const TextStyle(color: Colors.red)),
+              ),
+            ),
+            const SizedBox(height: 24),
+
             Text('Administrative Actions', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             _buildActionItem(
@@ -320,7 +570,7 @@ class AdminDashboard extends ConsumerWidget {
               title: 'SaaS Billing & Upgrade',
               subtitle: 'Change your subscription plan & payment details',
               icon: Icons.payments_outlined,
-              onTap: () {},
+              onTap: () => context.push('/saas-billing'),
             ),
             _buildActionItem(
               context,
@@ -328,6 +578,20 @@ class AdminDashboard extends ConsumerWidget {
               subtitle: 'Configure company working hours & GPS geofencing radius',
               icon: Icons.tune_rounded,
               onTap: () => context.push('/workspace-settings'),
+            ),
+            _buildActionItem(
+              context,
+              title: 'Geofence Audit Log',
+              subtitle: 'View live GPS map & check-in location reports',
+              icon: Icons.map_outlined,
+              onTap: () => context.push('/geofence-audit'),
+            ),
+            _buildActionItem(
+              context,
+              title: 'Security & Activity Logs',
+              subtitle: 'Review timeline of role updates & system settings changes',
+              icon: Icons.security_rounded,
+              onTap: () => context.push('/audit-logs'),
             ),
           ],
         ),
@@ -343,32 +607,38 @@ class AdminDashboard extends ConsumerWidget {
     required Color bgColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
             ),
           ),
         ],
@@ -404,7 +674,7 @@ class AdminDashboard extends ConsumerWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
           child: Icon(icon, color: AppTheme.primaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),

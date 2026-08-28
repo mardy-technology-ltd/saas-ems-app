@@ -9,7 +9,7 @@ final directoryServiceProvider = Provider<DirectoryService>((ref) {
 });
 
 // A stream of organization members
-final directoryStreamProvider = StreamProvider.autoDispose<List<UserModel>>((ref) {
+final directoryStreamProvider = StreamProvider<List<UserModel>>((ref) {
   final directoryService = ref.watch(directoryServiceProvider);
   final authState = ref.watch(authNotifierProvider);
   final orgId = authState.organization?.organizationId;

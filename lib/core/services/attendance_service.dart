@@ -10,6 +10,9 @@ class AttendanceRecord {
   final DateTime checkInTime;
   final DateTime? checkOutTime;
   final String status; // 'present', 'late', 'absent', 'leave'
+  final double? latitude;
+  final double? longitude;
+  final bool isWithinGeofence;
 
   AttendanceRecord({
     required this.id,
@@ -19,6 +22,9 @@ class AttendanceRecord {
     required this.checkInTime,
     this.checkOutTime,
     required this.status,
+    this.latitude,
+    this.longitude,
+    this.isWithinGeofence = true,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +36,9 @@ class AttendanceRecord {
       'checkInTime': checkInTime.toIso8601String(),
       'checkOutTime': checkOutTime?.toIso8601String(),
       'status': status,
+      'latitude': latitude,
+      'longitude': longitude,
+      'isWithinGeofence': isWithinGeofence,
     };
   }
 
@@ -42,6 +51,9 @@ class AttendanceRecord {
       checkInTime: DateTime.tryParse(map['checkInTime'] ?? '') ?? DateTime.now(),
       checkOutTime: map['checkOutTime'] != null ? DateTime.tryParse(map['checkOutTime']) : null,
       status: map['status'] ?? 'present',
+      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
+      isWithinGeofence: map['isWithinGeofence'] ?? true,
     );
   }
 }
@@ -63,14 +75,42 @@ class AttendanceService {
       organizationId: 'mock_org_1',
       checkInTime: DateTime.now().copyWith(hour: 8, minute: 45),
       status: 'present',
+      latitude: 23.8103,
+      longitude: 90.4125,
+      isWithinGeofence: true,
     ),
     AttendanceRecord(
       id: 'mock_att_2',
       userId: 'mock_hr',
       userName: 'HR Manager',
       organizationId: 'mock_org_1',
-      checkInTime: DateTime.now().copyWith(hour: 9, minute: 25), // Late after 9:00
+      checkInTime: DateTime.now().copyWith(hour: 9, minute: 25), // Late
       status: 'late',
+      latitude: 23.8115,
+      longitude: 90.4132,
+      isWithinGeofence: true,
+    ),
+    AttendanceRecord(
+      id: 'mock_att_3',
+      userId: 'mock_emp1',
+      userName: 'Rahim Ahmed',
+      organizationId: 'mock_org_1',
+      checkInTime: DateTime.now().copyWith(hour: 8, minute: 55),
+      status: 'present',
+      latitude: 23.8200, // Slightly further away
+      longitude: 90.4250,
+      isWithinGeofence: false,
+    ),
+    AttendanceRecord(
+      id: 'mock_att_4',
+      userId: 'mock_emp2',
+      userName: 'Tanvir Hasan',
+      organizationId: 'mock_org_1',
+      checkInTime: DateTime.now().copyWith(hour: 9, minute: 05),
+      status: 'late',
+      latitude: 23.8105,
+      longitude: 90.4128,
+      isWithinGeofence: true,
     ),
   ];
 
