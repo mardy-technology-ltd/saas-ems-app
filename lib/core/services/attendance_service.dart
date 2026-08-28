@@ -71,42 +71,9 @@ class AttendanceService {
   // In-memory mock database of attendance records for prototype testing
   static final List<AttendanceRecord> _mockRecords = [
     AttendanceRecord(
-      id: 'mock_att_1',
-      userId: 'mock_admin',
-      userName: 'Admin Owner',
-      organizationId: 'mock_org_1',
-      checkInTime: DateTime.now().copyWith(hour: 8, minute: 45),
-      status: 'present',
-      latitude: 23.8103,
-      longitude: 90.4125,
-      isWithinGeofence: true,
-    ),
-    AttendanceRecord(
-      id: 'mock_att_2',
-      userId: 'mock_hr',
-      userName: 'HR Manager',
-      organizationId: 'mock_org_1',
-      checkInTime: DateTime.now().copyWith(hour: 9, minute: 25), // Late
-      status: 'late',
-      latitude: 23.8115,
-      longitude: 90.4132,
-      isWithinGeofence: true,
-    ),
-    AttendanceRecord(
-      id: 'mock_att_3',
-      userId: 'mock_emp1',
-      userName: 'Rahim Ahmed',
-      organizationId: 'mock_org_1',
-      checkInTime: DateTime.now().copyWith(hour: 8, minute: 55),
-      status: 'present',
-      latitude: 23.8200, // Slightly further away
-      longitude: 90.4250,
-      isWithinGeofence: false,
-    ),
-    AttendanceRecord(
-      id: 'mock_att_4',
-      userId: 'mock_emp2',
-      userName: 'Tanvir Hasan',
+      id: 'mock_att_demo_staff',
+      userId: 'mock_emp_other',
+      userName: 'Tanvir Hasan (Staff)',
       organizationId: 'mock_org_1',
       checkInTime: DateTime.now().copyWith(hour: 9, minute: 05),
       status: 'late',

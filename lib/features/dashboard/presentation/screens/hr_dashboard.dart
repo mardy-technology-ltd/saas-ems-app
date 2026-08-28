@@ -554,6 +554,37 @@ class _HRDashboardState extends ConsumerState<HRDashboard> {
     final user = authState.user;
     final org = authState.organization;
     final noticesAsync = ref.watch(noticeStreamProvider);
+    final todayAttendanceAsync = ref.watch(todayAttendanceStreamProvider);
+
+    todayAttendanceAsync.whenData((records) {
+      if (user != null) {
+        bool found = false;
+        for (final r in records) {
+          if (r.userId == user.uid) {
+            found = true;
+            if (r.checkOutTime != null) {
+              _isCompletedToday = true;
+              _isCheckedIn = false;
+              _checkOutTimeString = "${r.checkOutTime!.hour.toString().padLeft(2, '0')}:${r.checkOutTime!.minute.toString().padLeft(2, '0')}";
+              _statusMessage = "Attendance completed for today";
+            } else {
+              _isCheckedIn = true;
+              _isCompletedToday = false;
+              _timeString = "${r.checkInTime.hour.toString().padLeft(2, '0')}:${r.checkInTime.minute.toString().padLeft(2, '0')}";
+              final lateness = r.status == 'late' ? ' (Late)' : '';
+              final geofenceStatus = r.isWithinGeofence ? ' [Inside Office]' : ' [Outside Office]';
+              _statusMessage = "Checked In$lateness$geofenceStatus";
+            }
+            break;
+          }
+        }
+        if (!found) {
+          _isCheckedIn = false;
+          _isCompletedToday = false;
+          _statusMessage = "Not checked in today";
+        }
+      }
+    });
 
     return Scaffold(
       drawer: const AppDrawer(),
