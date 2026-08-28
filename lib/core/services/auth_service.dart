@@ -10,6 +10,7 @@ class UserModel {
   final String? organizationId;
   final String role; // admin, hr, employee
   final String designation;
+  final String department; // IT, HR, Sales, Accounts
 
   UserModel({
     required this.uid,
@@ -18,6 +19,7 @@ class UserModel {
     this.organizationId,
     required this.role,
     required this.designation,
+    this.department = 'Engineering',
   });
 
   Map<String, dynamic> toMap() {
@@ -28,17 +30,33 @@ class UserModel {
       'organizationId': organizationId,
       'role': role,
       'designation': designation,
+      'department': department,
     };
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    final role = map['role'] ?? 'employee';
+    final designation = map['designation'] ?? 'Staff';
+
+    String defaultDept = 'Engineering';
+    if (role == 'hr' || designation.toLowerCase().contains('hr')) {
+      defaultDept = 'HR';
+    } else if (role == 'admin' || designation.toLowerCase().contains('owner') || designation.toLowerCase().contains('manager')) {
+      defaultDept = 'Management';
+    } else if (designation.toLowerCase().contains('sales') || designation.toLowerCase().contains('marketing')) {
+      defaultDept = 'Sales';
+    } else if (designation.toLowerCase().contains('account') || designation.toLowerCase().contains('finance')) {
+      defaultDept = 'Accounts';
+    }
+
     return UserModel(
       uid: map['uid'] ?? '',
       email: map['email'] ?? '',
       displayName: map['displayName'] ?? '',
       organizationId: map['organizationId'],
-      role: map['role'] ?? 'employee',
-      designation: map['designation'] ?? 'Staff',
+      role: role,
+      designation: designation,
+      department: map['department'] ?? defaultDept,
     );
   }
 }
@@ -96,9 +114,9 @@ class OrganizationModel {
 class AuthService {
   // In-memory fallback database for prototype testing when Firebase is not configured
   static final Map<String, UserModel> _mockUsers = {
-    'admin@ems.com': UserModel(uid: 'mock_admin', email: 'admin@ems.com', displayName: 'Admin Owner', role: 'admin', designation: 'Company Owner', organizationId: 'mock_org_1'),
-    'hr@ems.com': UserModel(uid: 'mock_hr', email: 'hr@ems.com', displayName: 'HR Manager', role: 'hr', designation: 'HR Lead', organizationId: 'mock_org_1'),
-    'employee@ems.com': UserModel(uid: 'mock_emp', email: 'employee@ems.com', displayName: 'Rahim Ahmed', role: 'employee', designation: 'Software Developer', organizationId: 'mock_org_1'),
+    'admin@ems.com': UserModel(uid: 'mock_admin', email: 'admin@ems.com', displayName: 'Admin Owner', role: 'admin', designation: 'Company Owner', organizationId: 'mock_org_1', department: 'Management'),
+    'hr@ems.com': UserModel(uid: 'mock_hr', email: 'hr@ems.com', displayName: 'HR Manager', role: 'hr', designation: 'HR Lead', organizationId: 'mock_org_1', department: 'HR'),
+    'employee@ems.com': UserModel(uid: 'mock_emp', email: 'employee@ems.com', displayName: 'Rahim Ahmed', role: 'employee', designation: 'Software Developer', organizationId: 'mock_org_1', department: 'Engineering'),
   };
 
   static final Map<String, OrganizationModel> _mockOrgs = {

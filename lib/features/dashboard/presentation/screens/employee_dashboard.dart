@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../controllers/attendance_controller.dart';
 
 class EmployeeDashboard extends ConsumerStatefulWidget {
   const EmployeeDashboard({super.key});
@@ -15,20 +16,42 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
   String _statusMessage = "Not checked in today";
   String _timeString = "--:--";
 
-  void _toggleCheckIn() {
-    setState(() {
-      if (!_isCheckedIn) {
+  void _toggleCheckIn() async {
+    final authState = ref.read(authNotifierProvider);
+    final user = authState.user;
+    final org = authState.organization;
+
+    if (user == null || org == null) return;
+
+    final attendanceService = ref.read(attendanceServiceProvider);
+
+    if (!_isCheckedIn) {
+      final now = DateTime.now();
+      final timeFormatted = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+      
+      final record = await attendanceService.checkIn(
+        user.uid,
+        user.displayName,
+        org.organizationId,
+        checkInStartHour: org.checkInStartHour ?? "09:00",
+      );
+
+      setState(() {
         _isCheckedIn = true;
-        _statusMessage = "Checked In successfully";
-        final now = DateTime.now();
-        _timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-      } else {
+        _statusMessage = record.status == 'late' ? "Checked In (Late)" : "Checked In successfully";
+        _timeString = timeFormatted;
+      });
+    } else {
+      await attendanceService.checkOut(user.uid, org.organizationId);
+
+      setState(() {
         _isCheckedIn = false;
         _statusMessage = "Checked Out successfully";
         _timeString = "--:--";
-      }
-    });
+      });
+    }
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isCheckedIn ? 'Checked in successfully at $_timeString' : 'Checked out successfully'),

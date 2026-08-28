@@ -23,14 +23,20 @@ class DirectoryService {
     }
 
     // Fallback: Mock stream based on in-memory mock data
-    // Simply fetch mock users matching organization ID
     return Stream.periodic(const Duration(seconds: 1), (_) {
-      // Accessing package-internal data of AuthService using mock mapping
-      // Since _mockUsers is static in AuthService, we can simulate:
       return [
-        UserModel(uid: 'mock_admin', email: 'admin@ems.com', displayName: 'Admin Owner', role: 'admin', designation: 'Company Owner', organizationId: organizationId),
-        UserModel(uid: 'mock_hr', email: 'hr@ems.com', displayName: 'HR Manager', role: 'hr', designation: 'HR Lead', organizationId: organizationId),
-        UserModel(uid: 'mock_emp', email: 'employee@ems.com', displayName: 'Rahim Ahmed', role: 'employee', designation: 'Software Developer', organizationId: organizationId),
+        UserModel(uid: 'mock_admin', email: 'admin@ems.com', displayName: 'Admin Owner', role: 'admin', designation: 'Company Owner', organizationId: organizationId, department: 'Management'),
+        UserModel(uid: 'mock_hr', email: 'hr@ems.com', displayName: 'HR Manager', role: 'hr', designation: 'HR Lead', organizationId: organizationId, department: 'HR'),
+        UserModel(uid: 'mock_emp1', email: 'employee@ems.com', displayName: 'Rahim Ahmed', role: 'employee', designation: 'Senior Developer', organizationId: organizationId, department: 'Engineering'),
+        UserModel(uid: 'mock_emp2', email: 'tanvir@ems.com', displayName: 'Tanvir Hasan', role: 'employee', designation: 'Backend Engineer', organizationId: organizationId, department: 'Engineering'),
+        UserModel(uid: 'mock_emp3', email: 'nusrat@ems.com', displayName: 'Nusrat Jahan', role: 'employee', designation: 'UI/UX Designer', organizationId: organizationId, department: 'Engineering'),
+        UserModel(uid: 'mock_emp4', email: 'sakib@ems.com', displayName: 'Sakib Khan', role: 'employee', designation: 'QA Specialist', organizationId: organizationId, department: 'Engineering'),
+        UserModel(uid: 'mock_emp5', email: 'anika@ems.com', displayName: 'Anika Rahman', role: 'hr', designation: 'HR Executive', organizationId: organizationId, department: 'HR'),
+        UserModel(uid: 'mock_emp6', email: 'hasan@ems.com', displayName: 'Hasan Ali', role: 'employee', designation: 'Sales Manager', organizationId: organizationId, department: 'Sales'),
+        UserModel(uid: 'mock_emp7', email: 'rifat@ems.com', displayName: 'Rifat Hossain', role: 'employee', designation: 'Sales Executive', organizationId: organizationId, department: 'Sales'),
+        UserModel(uid: 'mock_emp8', email: 'sabrina@ems.com', displayName: 'Sabrina Akter', role: 'employee', designation: 'Marketing Specialist', organizationId: organizationId, department: 'Sales'),
+        UserModel(uid: 'mock_emp9', email: 'mahmud@ems.com', displayName: 'Mahmudul Haque', role: 'employee', designation: 'Chief Accountant', organizationId: organizationId, department: 'Accounts'),
+        UserModel(uid: 'mock_emp10', email: 'bilkis@ems.com', displayName: 'Bilkis Begum', role: 'employee', designation: 'Finance Executive', organizationId: organizationId, department: 'Accounts'),
       ];
     });
   }

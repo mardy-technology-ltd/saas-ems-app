@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../controllers/attendance_controller.dart';
 
 class AdminDashboard extends ConsumerWidget {
   const AdminDashboard({super.key});
@@ -13,6 +14,8 @@ class AdminDashboard extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
     final org = authState.organization;
+    final stats = ref.watch(attendanceStatsProvider);
+    final departments = ref.watch(departmentStatsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -90,6 +93,193 @@ class AdminDashboard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Today's Attendance Overview Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Today's Attendance Overview", style: Theme.of(context).textTheme.titleLarge),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.secondaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Live',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Card(
+              color: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Turnout Rate: ${stats.attendancePercentage.toStringAsFixed(0)}%',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        Text(
+                          '${stats.totalPresent} / ${stats.totalStaff} Checked In',
+                          style: const TextStyle(color: AppTheme.textSecondaryColor, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: stats.totalStaff > 0 ? (stats.totalPresent / stats.totalStaff) : 0.0,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey.shade200,
+                        color: AppTheme.secondaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildAttendanceMetricCard(
+                            title: 'Present Today',
+                            value: '${stats.presentCount}',
+                            icon: Icons.check_circle_outline_rounded,
+                            color: const Color(0xFF00C853),
+                            bgColor: const Color(0xFFE8F5E9),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildAttendanceMetricCard(
+                            title: 'Late Check-ins',
+                            value: '${stats.lateCount}',
+                            icon: Icons.access_time_rounded,
+                            color: const Color(0xFFFFAB00),
+                            bgColor: const Color(0xFFFFF8E1),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildAttendanceMetricCard(
+                            title: 'On Leave/Absent',
+                            value: '${stats.onLeaveOrAbsent}',
+                            icon: Icons.event_busy_rounded,
+                            color: const Color(0xFFFF1744),
+                            bgColor: const Color(0xFFFFEBEE),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Department Breakdown Section
+            Text('Department Breakdown', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Card(
+              color: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: departments.map((dept) {
+                    Color deptColor = Colors.blue;
+                    IconData deptIcon = Icons.business_center_outlined;
+
+                    if (dept.name == 'Engineering') {
+                      deptColor = const Color(0xFF3F51B5);
+                      deptIcon = Icons.developer_mode_rounded;
+                    } else if (dept.name == 'HR') {
+                      deptColor = const Color(0xFF009688);
+                      deptIcon = Icons.people_outline_rounded;
+                    } else if (dept.name == 'Sales') {
+                      deptColor = const Color(0xFFFF9800);
+                      deptIcon = Icons.trending_up_rounded;
+                    } else if (dept.name == 'Accounts') {
+                      deptColor = const Color(0xFF9C27B0);
+                      deptIcon = Icons.account_balance_wallet_outlined;
+                    } else if (dept.name == 'Management') {
+                      deptColor = const Color(0xFF607D8B);
+                      deptIcon = Icons.admin_panel_settings_outlined;
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(deptIcon, size: 18, color: deptColor),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    dept.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '${dept.count} Staff (${dept.percentage.toStringAsFixed(0)}%)',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: dept.percentage / 100,
+                              minHeight: 6,
+                              backgroundColor: deptColor.withValues(alpha: 0.1),
+                              color: deptColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
             Text('Quick Statistics', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Row(
@@ -98,7 +288,7 @@ class AdminDashboard extends ConsumerWidget {
                   child: _buildStatCard(
                     context,
                     title: 'Active Staff',
-                    value: '12',
+                    value: '${stats.totalStaff}',
                     icon: Icons.people_rounded,
                     color: Colors.blue.shade700,
                   ),
@@ -141,6 +331,47 @@ class AdminDashboard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAttendanceMetricCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ],
       ),
     );
   }
