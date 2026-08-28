@@ -6,7 +6,8 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/leave_controller.dart';
 
 class LeaveManagementScreen extends ConsumerStatefulWidget {
-  const LeaveManagementScreen({super.key});
+  final bool hideAppBar;
+  const LeaveManagementScreen({super.key, this.hideAppBar = false});
 
   @override
   ConsumerState<LeaveManagementScreen> createState() => _LeaveManagementScreenState();
@@ -185,9 +186,11 @@ class _LeaveManagementScreenState extends ConsumerState<LeaveManagementScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Leave Management'),
-      ),
+      appBar: widget.hideAppBar
+          ? null
+          : AppBar(
+              title: const Text('Leave Management'),
+            ),
       body: leavesAsync.when(
         data: (leaves) {
           final pendingCount = leaves.where((l) => l.status == 'PENDING').length;

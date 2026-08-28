@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/screens/profile_screen.dart';
 import '../controllers/attendance_controller.dart';
 import '../controllers/notice_controller.dart';
+import 'leave_management_screen.dart';
 
 class EmployeeDashboard extends ConsumerStatefulWidget {
   const EmployeeDashboard({super.key});
@@ -16,6 +17,7 @@ class EmployeeDashboard extends ConsumerStatefulWidget {
 }
 
 class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
+  int _selectedIndex = 0;
   bool _isCheckedIn = false;
   bool _isWithinGeofence = true;
   String _statusMessage = "Not checked in today";
@@ -96,25 +98,14 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildOverviewTab() {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
     final org = authState.organization;
 
-    return Scaffold(
-      drawer: const AppDrawer(),
-      appBar: AppBar(
-        title: const Text('Employee Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+    return SingleChildScrollView(
+      key: const PageStorageKey('emp_home_overview'),
+      padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -129,7 +120,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                       child: const Icon(Icons.person_rounded, size: 36, color: AppTheme.primaryColor),
                     ),
                     const SizedBox(width: 16),
@@ -279,7 +270,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: badgeColor.withOpacity(0.15),
+                                color: badgeColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -340,7 +331,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
               title: 'Apply for Leave',
               subtitle: 'Submit requests for sick, annual, or casual leaves',
               icon: Icons.calendar_today_outlined,
-              onTap: () => context.push('/leave-management'),
+              onTap: () => setState(() => _selectedIndex = 1),
             ),
             _buildActionItem(
               context,
@@ -358,6 +349,65 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
             ),
           ],
         ),
+      );
+    }
+  Widget _buildSelectedTabBody() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildOverviewTab();
+      case 1:
+        return const LeaveManagementScreen(key: PageStorageKey('emp_leaves'), hideAppBar: true);
+      case 2:
+        return const ProfileScreen(key: PageStorageKey('emp_profile'), hideAppBar: true);
+      default:
+        return _buildOverviewTab();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        title: Text(
+          _selectedIndex == 0
+              ? 'Employee Dashboard'
+              : _selectedIndex == 1
+                  ? 'My Leave Dashboard'
+                  : 'My Profile',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
+          ),
+        ],
+      ),
+      body: _buildSelectedTabBody(),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month_rounded),
+            label: 'Leaves',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -370,7 +420,7 @@ class _EmployeeDashboardState extends ConsumerState<EmployeeDashboard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
           child: Icon(icon, color: AppTheme.primaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),

@@ -109,9 +109,13 @@ class GeofenceAuditScreen extends ConsumerWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
                     child: FlutterMap(
+                      key: const ValueKey('geofence_audit_flutter_map'),
                       options: MapOptions(
                         initialCenter: LatLng(officeLat, officeLng),
                         initialZoom: 14.5,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                        ),
                       ),
                       children: [
                         TileLayer(

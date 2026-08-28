@@ -171,10 +171,11 @@ class AuthService {
   }
 
   Future<UserModel?> signIn(String email, String password) async {
+    final cleanEmail = email.trim().toLowerCase();
     if (isFirebaseInitialized) {
       try {
         final credential = await fb_auth.FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
+          email: cleanEmail,
           password: password,
         );
         if (credential.user != null) {
@@ -182,13 +183,21 @@ class AuthService {
           return _currentUser;
         }
       } catch (e) {
-        debugPrint("Firebase SignIn Error: $e. Falling back to local mock login for email.");
+        debugPrint("Firebase SignIn Error: $e.");
+        if (e is fb_auth.FirebaseAuthException) {
+          if (e.code == 'wrong-password' || e.code == 'user-not-found' || e.code == 'invalid-credential') {
+            throw Exception("Incorrect email or password. Please try again.");
+          }
+        }
       }
     }
 
     // Local Mock Fallback
-    final user = _mockUsers[email.trim().toLowerCase()];
+    final user = _mockUsers[cleanEmail];
     if (user != null) {
+      if (password != 'password') {
+        throw Exception("Incorrect password. Password for demo mock users is 'password'.");
+      }
       _currentUser = user;
       if (user.organizationId != null) {
         _currentOrg = _mockOrgs[user.organizationId!];

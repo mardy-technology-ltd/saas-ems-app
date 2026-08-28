@@ -25,8 +25,16 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
   }
 
   void _showEditBottomSheet(UserModel targetUser) {
-    // Current logged in user cannot edit their own role/designation here
     final currentUser = ref.read(authNotifierProvider).user;
+    final isAdmin = currentUser?.role == 'admin';
+
+    if (!isAdmin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Only Workspace Admin can edit member roles & designations.")),
+      );
+      return;
+    }
+
     final isSelf = currentUser?.uid == targetUser.uid;
 
     if (isSelf) {

@@ -526,6 +526,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
                           final double lng = double.tryParse(_lngController.text) ?? 90.4125;
                           
                           return FlutterMap(
+                            key: const ValueKey('workspace_settings_map'),
                             mapController: _mapController,
                             options: MapOptions(
                               initialCenter: LatLng(lat, lng),

@@ -94,7 +94,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSigningUp = state.matchedLocation == '/signup';
       final isOnboarding = state.matchedLocation == '/onboarding';
 
-      if (isLoading) return isSplash ? null : '/splash';
+      if (isLoading) return null;
 
       // User not logged in
       if (user == null) {
@@ -106,6 +106,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (org == null) {
         if (state.matchedLocation == '/workspace-setup') return null;
         return '/workspace-setup';
+      }
+
+      // Admin-only route guard: /workspace-settings, /saas-billing, /audit-logs, /admin-dashboard
+      final isAdminRoute = state.matchedLocation == '/workspace-settings' ||
+          state.matchedLocation == '/saas-billing' ||
+          state.matchedLocation == '/audit-logs' ||
+          state.matchedLocation == '/admin-dashboard';
+
+      if (isAdminRoute && user.role != 'admin') {
+        if (user.role == 'hr') return '/hr-dashboard';
+        return '/employee-dashboard';
+      }
+
+      // HR & Admin route guard: /hr-dashboard
+      final isHRRoute = state.matchedLocation == '/hr-dashboard';
+      if (isHRRoute && user.role != 'admin' && user.role != 'hr') {
+        return '/employee-dashboard';
       }
 
       // User is logged in and has an Organization -> Dashboard redirection

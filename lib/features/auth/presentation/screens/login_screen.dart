@@ -26,11 +26,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (success) {
         // GoRouter redirect logic will automatically take them to the correct dashboard/workspace setup
       } else {
-        final error = ref.read(authNotifierProvider).errorMessage;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error ?? 'Login failed. Please check credentials.'),
-            backgroundColor: Colors.redAccent,
+        final error = ref.read(authNotifierProvider).errorMessage ?? 'Login failed. Incorrect email or password.';
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.error_outline_rounded, color: Colors.redAccent),
+                SizedBox(width: 8),
+                Text('Login Failed'),
+              ],
+            ),
+            content: Text(error),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }

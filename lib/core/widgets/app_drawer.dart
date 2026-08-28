@@ -154,14 +154,15 @@ class AppDrawer extends ConsumerWidget {
                     }
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.people_alt_rounded, color: AppTheme.primaryColor),
-                  title: const Text('Employee Directory'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/employee-directory');
-                  },
-                ),
+                if (user?.role == 'admin' || user?.role == 'hr')
+                  ListTile(
+                    leading: const Icon(Icons.people_alt_rounded, color: AppTheme.primaryColor),
+                    title: const Text('Employee Directory'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/employee-directory');
+                    },
+                  ),
                 ListTile(
                   leading: const Icon(Icons.event_note_rounded, color: AppTheme.primaryColor),
                   title: const Text('Leave Management'),
@@ -170,38 +171,41 @@ class AppDrawer extends ConsumerWidget {
                     context.push('/leave-management');
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.map_rounded, color: AppTheme.primaryColor),
-                  title: const Text('Geofence Audit Log'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/geofence-audit');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.security_rounded, color: AppTheme.primaryColor),
-                  title: const Text('Security Activity Logs'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/audit-logs');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.payments_rounded, color: AppTheme.primaryColor),
-                  title: const Text('SaaS Billing & Upgrade'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/saas-billing');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.tune_rounded, color: AppTheme.primaryColor),
-                  title: const Text('Workspace Settings'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.push('/workspace-settings');
-                  },
-                ),
+                if (user?.role == 'admin' || user?.role == 'hr')
+                  ListTile(
+                    leading: const Icon(Icons.map_rounded, color: AppTheme.primaryColor),
+                    title: const Text('Geofence Audit Log'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/geofence-audit');
+                    },
+                  ),
+                if (user?.role == 'admin') ...[
+                  ListTile(
+                    leading: const Icon(Icons.security_rounded, color: AppTheme.primaryColor),
+                    title: const Text('Security Activity Logs'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/audit-logs');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.payments_rounded, color: AppTheme.primaryColor),
+                    title: const Text('SaaS Billing & Upgrade'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/saas-billing');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.tune_rounded, color: AppTheme.primaryColor),
+                    title: const Text('Workspace Settings'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/workspace-settings');
+                    },
+                  ),
+                ],
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.person_outline_rounded, color: AppTheme.primaryColor),
