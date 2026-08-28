@@ -3,14 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/screens/profile_screen.dart';
+import '../../../directory/presentation/screens/employee_directory_screen.dart';
 import '../controllers/attendance_controller.dart';
 import '../controllers/notice_controller.dart';
+import 'geofence_audit_screen.dart';
+import 'audit_logs_screen.dart';
 
-class AdminDashboard extends ConsumerWidget {
+class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
 
-  void _showPostNoticeModal(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends ConsumerState<AdminDashboard> {
+  int _selectedIndex = 0;
+
+  void _showPostNoticeModal(BuildContext context) {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     String priority = 'normal';
@@ -130,7 +142,7 @@ class AdminDashboard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
     final org = authState.organization;
@@ -138,18 +150,9 @@ class AdminDashboard extends ConsumerWidget {
     final departments = ref.watch(departmentStatsProvider);
     final noticesAsync = ref.watch(noticeStreamProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Admin Portal'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+    final List<Widget> pages = [
+      // Index 0: Main Dashboard Overview
+      SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -402,33 +405,6 @@ class AdminDashboard extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            Text('Quick Statistics', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    title: 'Active Staff',
-                    value: '${stats.totalStaff}',
-                    icon: Icons.people_rounded,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    title: 'SaaS Plan',
-                    value: 'Free Tier',
-                    icon: Icons.star_rounded,
-                    color: Colors.amber.shade800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
             // Company Notice Board Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -442,7 +418,7 @@ class AdminDashboard extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
-                  onPressed: () => _showPostNoticeModal(context, ref),
+                  onPressed: () => _showPostNoticeModal(context),
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Post Notice'),
                   style: ElevatedButton.styleFrom(
@@ -555,46 +531,84 @@ class AdminDashboard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-
-            Text('Administrative Actions', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            _buildActionItem(
-              context,
-              title: 'Employee Directory',
-              subtitle: 'Add, suspend, or update employee records',
-              icon: Icons.folder_shared_outlined,
-              onTap: () => context.push('/employee-directory'),
-            ),
-            _buildActionItem(
-              context,
-              title: 'SaaS Billing & Upgrade',
-              subtitle: 'Change your subscription plan & payment details',
-              icon: Icons.payments_outlined,
-              onTap: () => context.push('/saas-billing'),
-            ),
-            _buildActionItem(
-              context,
-              title: 'Workspace Settings',
-              subtitle: 'Configure company working hours & GPS geofencing radius',
-              icon: Icons.tune_rounded,
-              onTap: () => context.push('/workspace-settings'),
-            ),
-            _buildActionItem(
-              context,
-              title: 'Geofence Audit Log',
-              subtitle: 'View live GPS map & check-in location reports',
-              icon: Icons.map_outlined,
-              onTap: () => context.push('/geofence-audit'),
-            ),
-            _buildActionItem(
-              context,
-              title: 'Security & Activity Logs',
-              subtitle: 'Review timeline of role updates & system settings changes',
-              icon: Icons.security_rounded,
-              onTap: () => context.push('/audit-logs'),
-            ),
           ],
         ),
+      ),
+
+      // Index 1: Staff Directory View
+      const EmployeeDirectoryScreen(),
+
+      // Index 2: Geofence Audit View
+      const GeofenceAuditScreen(),
+
+      // Index 3: Activity Audit Logs View
+      const AuditLogsScreen(),
+
+      // Index 4: User Profile View
+      const ProfileScreen(),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        title: Text(
+          _selectedIndex == 0
+              ? 'Admin Portal'
+              : _selectedIndex == 1
+                  ? 'Employee Directory'
+                  : _selectedIndex == 2
+                      ? 'Geofence Audit Log'
+                      : _selectedIndex == 3
+                          ? 'Activity Audit Logs'
+                          : 'My Profile',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: 'Workspace Settings',
+            onPressed: () => context.push('/workspace-settings'),
+          ),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.people_outline_rounded),
+            selectedIcon: Icon(Icons.people_rounded),
+            label: 'Directory',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map_rounded),
+            label: 'Geofence',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.security_outlined),
+            selectedIcon: Icon(Icons.security_rounded),
+            label: 'Logs',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -642,45 +656,6 @@ class AdminDashboard extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(BuildContext context, {required String title, required String value, required IconData icon, required Color color}) {
-    return Card(
-      elevation: 2,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 12),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text(title, style: TextStyle(color: AppTheme.textSecondaryColor, fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionItem(BuildContext context, {required String title, required String subtitle, required IconData icon, required VoidCallback onTap}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-          child: Icon(icon, color: AppTheme.primaryColor),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: onTap,
       ),
     );
   }

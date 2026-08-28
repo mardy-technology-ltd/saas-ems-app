@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../core/widgets/app_drawer.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../controllers/notice_controller.dart';
 
@@ -15,6 +16,7 @@ class HRDashboard extends ConsumerWidget {
     final noticesAsync = ref.watch(noticeStreamProvider);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('HR Portal'),
         actions: [

@@ -14,6 +14,7 @@ import '../../features/directory/presentation/screens/workspace_settings_screen.
 import '../../features/dashboard/presentation/screens/saas_billing_screen.dart';
 import '../../features/dashboard/presentation/screens/geofence_audit_screen.dart';
 import '../../features/dashboard/presentation/screens/audit_logs_screen.dart';
+import '../../features/auth/presentation/screens/profile_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authNotifierProvider);
@@ -72,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/audit-logs',
         builder: (context, state) => const AuditLogsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
     redirect: (context, state) {
