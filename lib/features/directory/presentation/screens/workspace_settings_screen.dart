@@ -196,9 +196,186 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
     }
   }
 
+  void _showUploadLogoModal(BuildContext context) {
+    final urlController = TextEditingController(text: ref.read(authNotifierProvider).organization?.logoUrl ?? '');
+    String selectedPreset = urlController.text;
+
+    final List<Map<String, String>> presets = [
+      {'name': 'Tech Corp', 'url': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150'},
+      {'name': 'Innovate', 'url': 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150'},
+      {'name': 'EMS Global', 'url': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150'},
+      {'name': 'Creative Studio', 'url': 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Company Logo & Branding',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Enter a image URL or choose a preset logo for your organization',
+                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondaryColor),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Live Logo Preview
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+                      ),
+                      child: selectedPreset.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.network(
+                                selectedPreset,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.business_rounded,
+                                  size: 40,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.business_rounded, size: 40, color: AppTheme.primaryColor),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Image URL Input
+                  TextFormField(
+                    controller: urlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Logo Image URL',
+                      hintText: 'https://example.com/logo.png',
+                      prefixIcon: Icon(Icons.link_rounded),
+                    ),
+                    onChanged: (val) {
+                      setModalState(() {
+                        selectedPreset = val.trim();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  const Text('Select Logo Preset:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: presets.map((preset) {
+                        final isSelected = selectedPreset == preset['url'];
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              urlController.text = preset['url']!;
+                              selectedPreset = preset['url']!;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    preset['url']!,
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.business, size: 30),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  preset['name']!,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final url = urlController.text.trim();
+                      if (url.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter a valid logo URL or select a preset.')),
+                        );
+                        return;
+                      }
+
+                      await ref.read(authNotifierProvider.notifier).updateOrganizationLogo(url);
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Company logo updated successfully!'),
+                            backgroundColor: AppTheme.secondaryColor,
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Save Company Logo'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final org = authState.organization;
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -218,6 +395,65 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Company Logo & Branding Header Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.primaryColor.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+                          ),
+                          child: org?.logoUrl != null && org!.logoUrl!.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(11),
+                                  child: Image.network(
+                                    org.logoUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.business_rounded, color: AppTheme.primaryColor),
+                                  ),
+                                )
+                              : const Icon(Icons.business_rounded, color: AppTheme.primaryColor, size: 28),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                org?.name ?? 'Company Branding',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const Text(
+                                'Organization Logo & Thumbnail',
+                                style: TextStyle(fontSize: 12, color: AppTheme.textSecondaryColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => _showUploadLogoModal(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: const Size(0, 32),
+                          ),
+                          child: const Text('Change Logo', style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       const Icon(Icons.location_on_rounded, color: AppTheme.primaryColor),

@@ -63,14 +63,32 @@ class AppDrawer extends ConsumerWidget {
             ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              child: Text(
-                (user?.displayName ?? 'U').substring(0, 1).toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
+              child: org?.logoUrl != null && org!.logoUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(30),
+                      child: Image.network(
+                        org.logoUrl!,
+                        width: 54,
+                        height: 54,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Text(
+                          (user?.displayName ?? 'U').substring(0, 1).toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Text(
+                      (user?.displayName ?? 'U').substring(0, 1).toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
             ),
           ),
 

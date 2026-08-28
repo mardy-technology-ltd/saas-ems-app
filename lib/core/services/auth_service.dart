@@ -72,6 +72,7 @@ class OrganizationModel {
   final double? geofenceRadius; // in meters
   final String? checkInStartHour; // "09:00"
   final String? checkOutStartHour; // "18:00"
+  final String? logoUrl;
 
   OrganizationModel({
     required this.organizationId,
@@ -82,6 +83,7 @@ class OrganizationModel {
     this.geofenceRadius = 200.0,
     this.checkInStartHour = "09:00",
     this.checkOutStartHour = "18:00",
+    this.logoUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -94,6 +96,7 @@ class OrganizationModel {
       'geofenceRadius': geofenceRadius,
       'checkInStartHour': checkInStartHour,
       'checkOutStartHour': checkOutStartHour,
+      'logoUrl': logoUrl,
     };
   }
 
@@ -107,6 +110,7 @@ class OrganizationModel {
       geofenceRadius: map['geofenceRadius'] != null ? (map['geofenceRadius'] as num).toDouble() : 200.0,
       checkInStartHour: map['checkInStartHour'] ?? '09:00',
       checkOutStartHour: map['checkOutStartHour'] ?? '18:00',
+      logoUrl: map['logoUrl'],
     );
   }
 }
@@ -347,6 +351,7 @@ class AuthService {
       geofenceRadius: radius,
       checkInStartHour: checkInTime,
       checkOutStartHour: checkOutTime,
+      logoUrl: _currentOrg!.logoUrl,
     );
 
     if (isFirebaseInitialized) {
@@ -361,6 +366,38 @@ class AuthService {
     }
 
     // Local Mock update
+    _mockOrgs[_currentOrg!.organizationId] = updatedOrg;
+    _currentOrg = updatedOrg;
+
+    return updatedOrg;
+  }
+
+  Future<OrganizationModel> updateOrganizationLogo(String logoUrl) async {
+    if (_currentUser == null || _currentOrg == null) throw Exception("Unauthorized action");
+
+    final updatedOrg = OrganizationModel(
+      organizationId: _currentOrg!.organizationId,
+      name: _currentOrg!.name,
+      inviteCode: _currentOrg!.inviteCode,
+      officeLatitude: _currentOrg!.officeLatitude,
+      officeLongitude: _currentOrg!.officeLongitude,
+      geofenceRadius: _currentOrg!.geofenceRadius,
+      checkInStartHour: _currentOrg!.checkInStartHour,
+      checkOutStartHour: _currentOrg!.checkOutStartHour,
+      logoUrl: logoUrl,
+    );
+
+    if (isFirebaseInitialized) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('organizations')
+            .doc(_currentOrg!.organizationId)
+            .set(updatedOrg.toMap(), SetOptions(merge: true));
+      } catch (e) {
+        debugPrint("Firebase Org Update Logo Error: $e");
+      }
+    }
+
     _mockOrgs[_currentOrg!.organizationId] = updatedOrg;
     _currentOrg = updatedOrg;
 

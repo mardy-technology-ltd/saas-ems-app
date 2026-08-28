@@ -177,9 +177,20 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFEFF6FF),
-                        child: Icon(Icons.business_rounded, color: AppTheme.primaryColor),
+                      leading: CircleAvatar(
+                        backgroundColor: const Color(0xFFEFF6FF),
+                        child: org?.logoUrl != null && org!.logoUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.network(
+                                  org.logoUrl!,
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => const Icon(Icons.business_rounded, color: AppTheme.primaryColor),
+                                ),
+                              )
+                            : const Icon(Icons.business_rounded, color: AppTheme.primaryColor),
                       ),
                       title: const Text('Organization Name', style: TextStyle(fontSize: 12, color: AppTheme.textSecondaryColor)),
                       subtitle: Text(org?.name ?? 'My SaaS Company', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
