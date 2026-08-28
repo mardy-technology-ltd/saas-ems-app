@@ -5,7 +5,8 @@ import '../controllers/audit_log_controller.dart';
 import '../../../../core/services/audit_log_service.dart';
 
 class AuditLogsScreen extends ConsumerStatefulWidget {
-  const AuditLogsScreen({super.key});
+  final bool hideAppBar;
+  const AuditLogsScreen({super.key, this.hideAppBar = false});
 
   @override
   ConsumerState<AuditLogsScreen> createState() => _AuditLogsScreenState();
@@ -20,9 +21,11 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Security & Activity Audit Logs'),
-      ),
+      appBar: widget.hideAppBar
+          ? null
+          : AppBar(
+              title: const Text('Security & Activity Audit Logs'),
+            ),
       body: Column(
         children: [
           // Filter Chips Header

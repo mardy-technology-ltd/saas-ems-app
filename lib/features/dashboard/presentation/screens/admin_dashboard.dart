@@ -143,9 +143,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-    final user = authState.user;
-    final org = authState.organization;
     final stats = ref.watch(attendanceStatsProvider);
     final departments = ref.watch(departmentStatsProvider);
     final noticesAsync = ref.watch(noticeStreamProvider);
@@ -157,68 +154,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Info Card
-            Card(
-              color: AppTheme.primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      org?.name ?? 'My SaaS Workspace',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Welcome, ${user?.displayName ?? "Admin"} (Owner)',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Workspace Invite Code', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                              Text(
-                                org?.inviteCode ?? 'N/A',
-                                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy_rounded, color: Colors.white),
-                            onPressed: () {
-                              if (org?.inviteCode != null) {
-                                Clipboard.setData(ClipboardData(text: org!.inviteCode));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Invite Code copied to clipboard!')),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Today's Attendance Overview Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -536,16 +471,16 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       ),
 
       // Index 1: Staff Directory View
-      const EmployeeDirectoryScreen(),
+      const EmployeeDirectoryScreen(hideAppBar: true),
 
       // Index 2: Geofence Audit View
-      const GeofenceAuditScreen(),
+      const GeofenceAuditScreen(hideAppBar: true),
 
       // Index 3: Activity Audit Logs View
-      const AuditLogsScreen(),
+      const AuditLogsScreen(hideAppBar: true),
 
       // Index 4: User Profile View
-      const ProfileScreen(),
+      const ProfileScreen(hideAppBar: true),
     ];
 
     return Scaffold(

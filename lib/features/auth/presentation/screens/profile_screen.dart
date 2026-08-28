@@ -5,7 +5,8 @@ import '../../../../app/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+  final bool hideAppBar;
+  const ProfileScreen({super.key, this.hideAppBar = false});
 
   void _showEditProfileModal(BuildContext context, WidgetRef ref, String currentName, String currentDesignation) {
     final nameController = TextEditingController(text: currentName);
@@ -79,9 +80,11 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('My Profile & Account'),
-      ),
+      appBar: hideAppBar
+          ? null
+          : AppBar(
+              title: const Text('My Profile & Account'),
+            ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

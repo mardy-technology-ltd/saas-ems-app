@@ -8,7 +8,8 @@ import '../controllers/attendance_controller.dart';
 import '../../../../core/services/attendance_service.dart';
 
 class GeofenceAuditScreen extends ConsumerWidget {
-  const GeofenceAuditScreen({super.key});
+  final bool hideAppBar;
+  const GeofenceAuditScreen({super.key, this.hideAppBar = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,9 +23,11 @@ class GeofenceAuditScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Geofence Audit Log'),
-      ),
+      appBar: hideAppBar
+          ? null
+          : AppBar(
+              title: const Text('Geofence Audit Log'),
+            ),
       body: attendanceAsync.when(
         data: (records) {
           final insideCount = records.where((r) => r.isWithinGeofence).length;

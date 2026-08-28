@@ -6,7 +6,8 @@ import '../../../../core/services/auth_service.dart';
 import '../controllers/directory_controller.dart';
 
 class EmployeeDirectoryScreen extends ConsumerStatefulWidget {
-  const EmployeeDirectoryScreen({super.key});
+  final bool hideAppBar;
+  const EmployeeDirectoryScreen({super.key, this.hideAppBar = false});
 
   @override
   ConsumerState<EmployeeDirectoryScreen> createState() => _EmployeeDirectoryScreenState();
@@ -80,8 +81,8 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                   TextFormField(
                     controller: designationController,
                     decoration: const InputDecoration(
-                      labelText: 'Designation / Title',
-                      prefixIcon: Icon(Icons.badge_outlined),
+                      labelText: 'Designation / Job Title',
+                      prefixIcon: Icon(Icons.work_outline),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -90,16 +91,29 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                     isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'System Access Role',
-                      prefixIcon: Icon(Icons.security_rounded),
+                      prefixIcon: Icon(Icons.security_outlined),
                     ),
                     items: const [
                       DropdownMenuItem(
                         value: 'employee',
-                        child: Text('Employee', overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          'Employee - Standard Staff Access',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'hr',
-                        child: Text('HR Manager', overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          'HR - Operations & Leave Approvals',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'admin',
+                        child: Text(
+                          'Admin - Full System & Organization Control',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                     onChanged: (val) {
@@ -116,6 +130,13 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                   else
                     ElevatedButton(
                       onPressed: () async {
+                        if (designationController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Designation cannot be empty.')),
+                          );
+                          return;
+                        }
+
                         setModalState(() {
                           isSaving = true;
                         });
@@ -124,7 +145,7 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
                           await ref.read(directoryServiceProvider).updateUser(
                                 targetUser.uid,
                                 selectedRole,
-                                designationController.text,
+                                designationController.text.trim(),
                               );
                           if (context.mounted) {
                             Navigator.pop(context);
@@ -166,9 +187,11 @@ class _EmployeeDirectoryScreenState extends ConsumerState<EmployeeDirectoryScree
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Employee Directory'),
-      ),
+      appBar: widget.hideAppBar
+          ? null
+          : AppBar(
+              title: const Text('Employee Directory'),
+            ),
       body: Column(
         children: [
           // Search & Filter Panel
